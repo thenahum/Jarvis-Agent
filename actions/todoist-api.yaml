@@ -143,6 +143,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /tasks/{task_id}/close:
+    post:
+      operationId: closeTask
+      summary: Close a task
+      tags:
+        - tasks
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          description: The ID of the task to close
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Task closed successfully
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Task:
