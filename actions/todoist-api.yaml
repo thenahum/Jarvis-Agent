@@ -1,0 +1,257 @@
+openapi: 3.1.0
+info:
+  title: Todoist API
+  version: 1.0.0
+  license:
+    name: MIT
+paths:
+  /projects:
+    get:
+      operationId: getAllProjects
+      summary: Get all projects
+      tags:
+        - projects
+      responses:
+        '200':
+          description: An array of projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Projects'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tasks:
+    get:
+      operationId: getActiveTasks
+      summary: Get active tasks
+      tags:
+        - tasks
+      parameters:
+        - name: projectId
+          in: query
+          description: The id of the project to retrieve tasks for
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: An array of active tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tasks'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: createTask
+      summary: Create a new task
+      tags:
+        - tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: Task successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tasks/{id}:
+    post:
+      operationId: updateTask
+      summary: Update a task
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to delete
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        description: Task to update
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  description: The content of the task
+                due_string:
+                  type: string
+                  description: The due date of the task, in human-readable format
+                due_lang:
+                  type: string
+                  description: Language code for the due_string
+                priority:
+                  type: integer
+                  description: The priority of the task (1-4)
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deleteTask
+      summary: Delete a task
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to delete
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Task deleted successfully
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Task:
+      type: object
+      required:
+        - content
+      properties:
+        id:
+          type: string
+          description: Task ID.
+        project_id:
+          type: string
+          description: Task's project ID (read-only).
+        section_id:
+          type: string
+          description: ID of section task belongs to (after creation; read-only, will be null when the task has no parent section).
+        content:
+          type: string
+          description: Task content. This value may contain markdown-formatted text and hyperlinks. Details on markdown support can be found in the Text Formatting article in the Help Center.
+        description:
+          type: string
+          description: A description for the task. This value may contain markdown-formatted text and hyperlinks. Details on markdown support can be found in the Text Formatting article in the Help Center.
+        is_completed:
+          type: boolean
+          description: Flag to mark completed tasks.
+        labels:
+          type: array
+          items:
+            type: string
+          description: The task's labels (a list of names that may represent either personal or shared labels).
+        parent_id:
+          type: string
+          description: ID of parent task (after creation; read only, will be null for top-level tasks).
+        order:
+          type: integer
+          description: Position under the same parent or project for top-level tasks (read-only).
+        priority:
+          type: integer
+          description: Task priority from 1 (normal, default value) to 4 (urgent).
+        due:
+          type: object
+          description: object representing task due date/time, or null if no date is set (described below).
+        url:
+          type: string
+          description: URL to access this task in the Todoist web or mobile applications (read-only).
+        comment_count:
+          type: integer
+          description: Number of task comments (read-only).
+        created_at:
+          type: string
+          description: The date when the task was created (read-only).
+        creator_id:
+          type: string
+          description: The ID of the user who created the task (read-only).
+        assignee_id:
+          type: string
+          description: The responsible user ID (will be null if the task is unassigned).
+        assigner_id:
+          type: string
+          description: The ID of the user who assigned the task (read-only, will be null if the task is unassigned).
+        duration:
+          type: object
+          description: Object representing a task's duration. Includes a positive integer (greater than zero) for the amount of time the task will take, and the unit of time that the amount represents which must be either minute or day. Both the amount and unit must be defined. The object will be null if the task has no duration.
+    Due:
+      type: object
+      required:
+        - date
+        - is_recurring
+      properties:
+        date:
+          type: string
+          description: Human defined date in arbitrary format.
+        is_recurring:
+          type: boolean
+          description: Whether the task has a recurring due date.
+        datetime:
+          type: string
+          description: Date in format YYYY-MM-DD corrected to user's timezone.
+        timezone:
+          type: string
+          description: Only returned if exact due time set (i.e. it's not a whole-day task), date and time in RFC3339 format in UTC.
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    Project:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    Projects:
+      type: array
+      items:
+        $ref: '#/components/schemas/Project'
+    Tasks:
+      type: array
+      items:
+        $ref: '#/components/schemas/Task'
+servers:
+  - url: https://api.todoist.com/rest/v2
