@@ -36,7 +36,13 @@ paths:
           description: The id of the project to retrieve tasks for
           required: false
           schema:
-            type: integer
+            type: string
+        - name: section_id
+          in: query
+          description: The id of the section to retrieve tasks for
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: An array of active tasks
