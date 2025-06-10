@@ -84,7 +84,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: The id of the task to delete
+          description: The id of the task to update
           schema:
             type: integer
       requestBody:
@@ -160,7 +160,107 @@ paths:
         '204':
           description: Task closed successfully
         default:
-          description: Unexpected error
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /comments:
+    get:
+      operationId: getComments
+      summary: Get comments for a task or project
+      tags:
+        - comments
+      parameters:
+        - name: task_id
+          in: query
+          description: ID of the task to fetch comments for
+          required: false
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: ID of the project to fetch comments for
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comments'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: createComment
+      summary: Create a comment on a task or project
+      tags:
+        - comments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                task_id:
+                  type: string
+                project_id:
+                  type: string
+                content:
+                  type: string
+                  description: The comment content
+      responses:
+        '200':
+          description: Comment successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tasks/completed/by_completion_date:
+    get:
+      operationId: getCompletedTasksByDueDate
+      summary: Get completed tasks by due date
+      tags:
+        - tasks
+      parameters:
+        - name: since
+          in: query
+          description: ISO 8601 date string to filter from
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: until
+          in: query
+          description: ISO 8601 date string to filter to
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: An array of completed tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tasks'
+        default:
+          description: unexpected error
           content:
             application/json:
               schema:
@@ -180,54 +280,70 @@ components:
           description: Task's project ID (read-only).
         section_id:
           type: string
-          description: ID of section task belongs to (after creation; read-only, will be null when the task has no parent section).
+          description: ID of section task belongs to.
         content:
           type: string
-          description: Task content. This value may contain markdown-formatted text and hyperlinks. Details on markdown support can be found in the Text Formatting article in the Help Center.
+          description: Task content.
         description:
           type: string
-          description: A description for the task. This value may contain markdown-formatted text and hyperlinks. Details on markdown support can be found in the Text Formatting article in the Help Center.
+          description: Description of the task.
         is_completed:
           type: boolean
-          description: Flag to mark completed tasks.
         labels:
           type: array
           items:
             type: string
-          description: The task's labels (a list of names that may represent either personal or shared labels).
         parent_id:
           type: string
-          description: ID of parent task (after creation; read only, will be null for top-level tasks).
         order:
           type: integer
-          description: Position under the same parent or project for top-level tasks (read-only).
         priority:
           type: integer
-          description: Task priority from 1 (normal, default value) to 4 (urgent).
         due:
           type: object
-          description: object representing task due date/time, or null if no date is set (described below).
         url:
           type: string
-          description: URL to access this task in the Todoist web or mobile applications (read-only).
         comment_count:
           type: integer
-          description: Number of task comments (read-only).
         created_at:
           type: string
-          description: The date when the task was created (read-only).
         creator_id:
           type: string
-          description: The ID of the user who created the task (read-only).
         assignee_id:
           type: string
-          description: The responsible user ID (will be null if the task is unassigned).
         assigner_id:
           type: string
-          description: The ID of the user who assigned the task (read-only, will be null if the task is unassigned).
         duration:
           type: object
-          description: Object representing a task's duration. Includes a positive integer (greater than zero) for the amount of time the task will take, and the unit of time that the amount represents which must be either minute or day. Both the amount and unit must be defined. The object will be null if the task has no duration.
+    Comment:
+      type: object
+      required:
+        - content
+      properties:
+        id:
+          type: string
+          description: unique ID for comment
+        posted_uid:
+          type: string
+          description: posted unique comment ID  
+        content:
+          type: string
+          description: actual content in comment 
+        file_attachment:
+          type: object
+          description: file attachment  
+        uids_to_notify:
+          type: array
+          description: array of strings for users to notify about comment
+        is_deleted:
+          type: boolean
+          description: flag for if comment has been deleted 
+        posted_at:
+          type: string
+          description: date when comment was posted  
+        reactions:
+          type: object
+          description: object with reactions to comment  
     Due:
       type: object
       required:
@@ -236,16 +352,12 @@ components:
       properties:
         date:
           type: string
-          description: Human defined date in arbitrary format.
         is_recurring:
           type: boolean
-          description: Whether the task has a recurring due date.
         datetime:
           type: string
-          description: Date in format YYYY-MM-DD corrected to user's timezone.
         timezone:
           type: string
-          description: Only returned if exact due time set (i.e. it's not a whole-day task), date and time in RFC3339 format in UTC.
     Error:
       type: object
       required:
@@ -275,5 +387,9 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Task'
+    Comments:
+      type: array
+      items:
+        $ref: '#/components/schemas/Comment'
 servers:
   - url: https://api.todoist.com/rest/v2
