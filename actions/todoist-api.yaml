@@ -224,7 +224,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/Comment'
         default:
           description: unexpected error
           content:
@@ -335,6 +335,8 @@ components:
         uids_to_notify:
           type: array
           description: array of strings for users to notify about comment
+          items: 
+            type: string
         is_deleted:
           type: boolean
           description: flag for if comment has been deleted 
